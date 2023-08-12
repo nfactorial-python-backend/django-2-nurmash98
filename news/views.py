@@ -5,7 +5,6 @@ from .models import News, Comment
 
 def index(request):
     news = News.objects.all().order_by('-created_at')
-
     return render(request, 'news/index.html', {'list_news': news})
 
 def get_news(request, news_id):
@@ -26,4 +25,6 @@ def add_news(request):
         news.save()
         return redirect('news:index')
     return render(request, 'news:index')    
+
+
     
