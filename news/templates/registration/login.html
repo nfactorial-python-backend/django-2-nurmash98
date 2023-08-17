@@ -1,0 +1,14 @@
+{% extends 'news/base.html' %}
+
+
+{% block title %} Вход {% endblock %}
+{% block content %}
+
+    <form action="/login/" method = "post">
+        {% csrf_token %}
+
+        {{form}}
+        <p><input type="submit" value = "Войти"></p>
+        <p><a href="{% url 'news:sign_up' %}">Регистрация</a></p>
+    </form>
+{% endblock %}

@@ -1,16 +1,38 @@
 {% extends 'news/base.html' %}
-    {% block header %} All News {% endblock %}
+    
+    {% block title %} Все новости {% endblock %}
+    {% block header %} Все новости {% endblock %}
 
     {% block nav %}
+    <ol>
         {% for news in list_news %}
-        <li>
-            <ol>
-                <a href = "{{news.id}}/">{{news.title}}</a>
-            </ol>
-        </li>
+            <div class="card mt-2">
+                <div class="card-header"><strong>@{{ news.author.username }}</strong></div>
+                <div class="card-body d-flex flex-row justify-content-between">
+                  <div>
+                    <h5 class="card-title">
+                        <a href="{% url 'news:news_detail' news.id %}">{{news.title}}</a>
+                    </h5>
+                  </div>
+                  <div>
+                    {% if user == news.author or perms.news.delete_news %}
+                        <form action="{% url 'news:delete_news' news.id %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete">
+                            <button type="submit" class="btn btn-danger" >Удалить</button>
+                        </form>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="card-footer text-muted">{{news.created_at}}</div>
+              </div>
+        {% empty %}
+            <p>Нет новости</p>
         {% endfor %}
+    </ol>
     {% endblock %}
-    {% block content %}
+   
+    {% block comments_news %}
         <h4>Добавить новость</h4>
         <form method = "post">
             {% csrf_token %}
@@ -18,3 +40,5 @@
             <input type="submit" value="Добавить новость">
         </form>
     {% endblock %}
+    
+    
