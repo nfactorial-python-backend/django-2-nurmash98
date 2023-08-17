@@ -1,28 +1,32 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>News</title>
-</head>
+{% extends 'news/base.html' %}
 <body>
-    <h2>{{news.title}}</h2>
-    <p>{{news.content}}</p>
-   
-    <label>{{news.created_at}}</label>
-    <h3>Все комментарий:</h3>
-    {% for comment in comments %}
-        <li>
-            <ol><h4>{{comment.content}}</h4></ol>
-            <ol><label>{{comment.created_at}}</label></ol>
-        </li>
+    {% block header %}
+        <h2>{{news.title}}</h2>
+        <p>{{news.content}}</p>
+        <label>{{news.created_at}}</label>
+    {% endblock %}
 
-    {% endfor %}
-    <h3>Добавить комментарий:</h3>
-    <form method="post" action = "{% url 'news:get_news' news.id %}">
-        {% csrf_token %}
-        <input type = "text" name = "content">
-        <input type="submit" value="Добавить комментарий">
-    </form>
+    {% block nav %} 
+        <h3>Все комментарий:</h3>
+        {% for comment in comments %}
+            <li>
+                <ol><h4>{{comment.content}}</h4></ol>
+                <ol><label>{{comment.created_at}}</label></ol>
+            </li>
+
+        {% endfor %}
+    {% endblock %}
+    
+    {% block content %}
+
+        <h3>Добавить комментарий:</h3>
+        <form method="post">
+            {% csrf_token %}
+            {{form}}
+            <input type="submit" value="Добавить комментарий">
+        </form>
+       
+    {% endblock %}
+
 </body>
 </html>

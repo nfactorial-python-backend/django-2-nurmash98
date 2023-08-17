@@ -1,30 +1,60 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from .models import News, Comment
+from django.shortcuts import render, redirect, get_object_or_404, HttpResponseRedirect
+from .models import News, Comment, NewsForm, CommentForm
+from django.views import View
+from django.urls import reverse
 
 
+class NewsView(View):
+    def get(self, request):
+        news = News.objects.all().order_by('-created_at')
+        form = NewsForm()
+        return render(request, 'news/index.html', {'list_news': news, 'form': form})
+    
+    def post(self, request):
+        form = NewsForm(request.POST)
+        if form.is_valid():
+            title = form.cleaned_data.get('title')
+            content = form.cleaned_data.get('content')
+            news = News(title=title, content=content)
+            news.save()
+            return HttpResponseRedirect(request.path)
+        return HttpResponseRedirect(request.path)
 
-def index(request):
-    news = News.objects.all().order_by('-created_at')
-    return render(request, 'news/index.html', {'list_news': news})
+class NewsDetailView(View):
+    def get(self, request, news_id):
+        news = get_object_or_404(News, id=news_id)
+        form = CommentForm()
+        comments = news.comments.all().order_by('-created_at')
+        return render(request, 'news/detail.html', {'news': news, 'comments': comments, 'form': form})
+    
+  
+    def post(self, request, news_id):
+        news = get_object_or_404(News, id=news_id)
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            content = form.cleaned_data.get('content')
+            comment = Comment(content=content, news=news)
+            comment.save()
+            return HttpResponseRedirect(request.path)
+        return HttpResponseRedirect(request.path)
 
-def get_news(request, news_id):
-    news = get_object_or_404(News, id=news_id)
-    comments = news.comments.all().order_by('-created_at')
-    if request.method == 'POST':
-        content = request.POST.get('content')
-        comment = Comment(content=content, news = news)
-        comment.save()
-        return redirect('news:get_news', news_id=news_id)
-    return render(request, 'news/detail.html', {'news': news, 'comments': comments})
-
-def add_news(request):
-    if request.method == 'POST':
-        title = request.POST.get('title')
-        content = request.POST.get('content')
-        news = News(title=title, content=content)
-        news.save()
-        return redirect('news:index')
-    return render(request, 'news:index')    
-
-
+class UpdateNewsView(View):
+    def get(self, request, news_id):
+        news_id = int(news_id)
+        news = get_object_or_404(News, id=news_id)
+        form = NewsForm(instance=news)
+        return render(request, 'news/update.html', {'news': news, 'form': form})
+    
+    def post(self, request, news_id):
+        news_id = int(news_id)
+        news = get_object_or_404(News, id=news_id)
+        form = NewsForm(request.POST, instance=news)
+        if form.is_valid():
+            title = form.cleaned_data.get('title')
+            content = form.cleaned_data.get('content')
+            news.title = title
+            news.content = content
+            news.save()
+            return HttpResponseRedirect(reverse('news:news_detail', args=[news.id]))
+        return HttpResponseRedirect(request.path)
     

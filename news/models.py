@@ -1,4 +1,5 @@
 from django.db import models
+from django import forms 
 
 # Create your models here.
 
@@ -22,3 +23,20 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.content
+    
+class NewsForm(forms.ModelForm):
+    class Meta:
+        model = News
+        fields = ['title', 'content']
+        labels = {
+            'title' : 'Заголовок',
+            'content' : 'Содержание'
+        }
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['content']
+        labels = {
+            'content' : 'Комментарий'
+        }
