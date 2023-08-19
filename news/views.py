@@ -7,6 +7,44 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.decorators import method_decorator
 from django.contrib.auth.models import Group
+from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework import status
+from .serializers import NewsSerializer
+from rest_framework import generics
+
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+
+class NewsListCreateView(generics.ListCreateAPIView):
+    queryset = News.objects.all()
+    serializer_class = NewsSerializer
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+        
+class NewsDetailViewByGenerics(generics.RetrieveUpdateDestroyAPIView):
+    queryset = News.objects.all()
+    serializer_class = NewsSerializer
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+@api_view(['POST'])
+def news_add(request):
+    serializer = NewsSerializer(data=request.data)
+    if serializer.is_valid():
+        news = News(
+            title = serializer.validated_data.get('title'),
+            content = serializer.validated_data.get('content'),
+            author = serializer.validated_data.get('author'),
+        )
+        news.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 class NewsView(View):
     def get(self, request):
         news = News.objects.all().order_by('-created_at')
@@ -29,7 +67,7 @@ class NewsView(View):
 def delete_news(request, news_id):
     news_id = int(news_id)
     news = get_object_or_404(News, id=news_id)
-    if request.user == news.author or request.user.has_perm("user.delete_news"):
+    if request.user == news.author or request.user.has_perm("news.delete_news"):
         news.delete()
     return HttpResponseRedirect(reverse('news:news'))
 
@@ -78,7 +116,7 @@ def delete_comment(request, news_id, comment_id):
     news_id = int(news_id)
     comment_id = int(comment_id)
     comment = get_object_or_404(Comment, id=comment_id)
-    if comment.author == request.user or request.user.has_perm("user.delete_comment"):
+    if comment.author == request.user or request.user.has_perm("news.delete_comment"):
         comment.delete()
     return HttpResponseRedirect(reverse('news:news_detail', args=[news_id]))
 
